@@ -8,6 +8,7 @@
         public int Sueldo { get; set; }
         public int IdPerfil { get; set; }
 
+        public virtual Perfil PerfilReferencia { get; set; }
 
     }
 }
