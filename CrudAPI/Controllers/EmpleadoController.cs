@@ -4,6 +4,7 @@ using CrudAPI.Context;
 using CrudAPI.DTOs;
 using CrudAPI.Entities;
 using Microsoft.EntityFrameworkCore;
+using CrudAPI.Services;
 
 
 namespace CrudAPI.Controllers
@@ -12,68 +13,43 @@ namespace CrudAPI.Controllers
     [ApiController]
     public class EmpleadoController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public EmpleadoController(AppDbContext context)
+        private readonly EmpleadoService _empleadoService;
+
+        public EmpleadoController(EmpleadoService empleadoService)
         {
-            _context = context;
+            _empleadoService = empleadoService;
         }
 
         [HttpGet]
         [Route("lista")]
         public async Task<ActionResult<List<EmpleadoDTO>>> Get()
         {
-            var listaDTO = new List<EmpleadoDTO>();
-            var listaDB = await _context.Empleados.Include(p => p.PerfilReferencia).ToListAsync();
-
-            foreach (var item in listaDB)
-            {
-                listaDTO.Add(new EmpleadoDTO
-                {
-                    IdEmpleado = item.IdEmpleado,
-                    NombreCompleto = item.NombreCompleto,
-                    Sueldo = item.Sueldo,
-                    IdPerfil = item.IdPerfil,
-                    NombrePerfil = item.PerfilReferencia.Nombre
-                });
-
-            }
-
-            return Ok(listaDTO);
+            return Ok(await _empleadoService.Lista());
         }
 
 
         [HttpGet]
         [Route("buscar/{id}")]
-        public async Task<ActionResult<EmpleadoDTO>> Get(int id)
-        { 
-            var empleadoDTO = new EmpleadoDTO();
-            var empleadoDB = await _context.Empleados.Include(p => p.PerfilReferencia)
-                .Where(e => e.IdEmpleado == id).FirstAsync();
+        public async Task<ActionResult<EmpleadoDTO>> Get(int id)       {
 
-            empleadoDTO.IdEmpleado = id;
-            empleadoDTO.NombreCompleto = empleadoDB.NombreCompleto;
-            empleadoDTO.Sueldo = empleadoDB.Sueldo;
-            empleadoDTO.IdPerfil = empleadoDB.IdPerfil;
-            empleadoDTO.NombrePerfil = empleadoDB.PerfilReferencia.Nombre;
-
-            return Ok(empleadoDTO);
+            var empleado = await _empleadoService.ListarUno(id);
+            if (empleado is null)
+            {
+                return NotFound();
+            }
+            return Ok(empleado);
         }
 
         [HttpPost]
         [Route("guardar")]
         public async Task<ActionResult<EmpleadoDTO>> Guardar(EmpleadoDTO empleadoDTO)
         {
-            var empleadoDB = new Empleado
+            var empleado = await _empleadoService.GuardarEmpleado(empleadoDTO);
+            if (empleado is null)
             {
-                NombreCompleto = empleadoDTO.NombreCompleto,
-                Sueldo = empleadoDTO.Sueldo,
-                IdPerfil = empleadoDTO.IdPerfil
-            };
-
-            await _context.Empleados.AddAsync(empleadoDB);
-            await _context.SaveChangesAsync();
-
-            return Ok("Empleado agregado");
+                return NotFound();
+            }
+            return Ok("Empleado guardado");
 
         }
 
@@ -81,17 +57,13 @@ namespace CrudAPI.Controllers
         [Route("editar")]
         public async Task<ActionResult<EmpleadoDTO>> Editar(EmpleadoDTO empleadoDTO)
         {
-            var empleadoDB = await _context.Empleados.Include(p => p.PerfilReferencia)
-                .Where(e => e.IdEmpleado == empleadoDTO.IdEmpleado).FirstAsync();
+            var empleado = await _empleadoService.EditarEmpleado(empleadoDTO);
+            if (empleado is null)
+            {
+                return NotFound();
+            }
+            return Ok(empleadoDTO);
 
-            empleadoDB.NombreCompleto = empleadoDTO.NombreCompleto;
-            empleadoDB.Sueldo = empleadoDTO.Sueldo;
-            empleadoDB.IdPerfil = empleadoDTO.IdPerfil;
-
-            _context.Empleados.Update(empleadoDB);
-            await _context.SaveChangesAsync();
-
-            return Ok("Empleado modificado");
         }
 
 
@@ -99,17 +71,11 @@ namespace CrudAPI.Controllers
         [Route("eliminar/{id}")]
         public async Task<ActionResult<EmpleadoDTO>> Eliminar(int id)
         {
-            /*
-             var empleadoDB = await _context.Empleados
-                .Where(e => e.IdEmpleado == id).FirstOrDefaultAsync();
-            */
-            var empleadoDB = await _context.Empleados.FindAsync(id);
-
-            if (empleadoDB is null) return NotFound("Empleado no encontrado");
-
-            _context.Empleados.Remove(empleadoDB);
-            await _context.SaveChangesAsync();
-
+            var empleado = await _empleadoService.EliminarEmpleado(id);
+            if (empleado== false)
+            {
+                return NotFound();
+            }
             return Ok("Empleado eliminado");
         }
 

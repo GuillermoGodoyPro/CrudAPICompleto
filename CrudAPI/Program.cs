@@ -18,6 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Controllers Services
 builder.Services.AddScoped<PerfilService>();
+builder.Services.AddScoped<EmpleadoService>();
+
 
 
 var app = builder.Build();
