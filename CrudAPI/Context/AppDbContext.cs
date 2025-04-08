@@ -38,7 +38,6 @@ namespace CrudAPI.Context
                 tb.Property(col => col.NombreCompleto).HasMaxLength(50);
                 tb.HasOne(col => col.PerfilReferencia).WithMany(p => p.EmpleadosReferencia)
                 .HasForeignKey(col => col.IdPerfil);
-
                 tb.ToTable("Empleado");
                 
             });

@@ -1,8 +1,9 @@
-﻿using CrudAPI.Context;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+
+using CrudAPI.Context;
+using CrudAPI.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using CrudAPI.Services;
 
 namespace CrudAPI.Controllers
 {
@@ -10,19 +11,18 @@ namespace CrudAPI.Controllers
     [ApiController]
     public class PerfilController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly PerfilService _perfilService;
 
-        public PerfilController(AppDbContext context        )
+        public PerfilController(PerfilService perfilService)
         {
-            _context = context;
+            _perfilService = perfilService;
         }
 
         [HttpGet]
         [Route("lista")]
-        public async Task<ActionResult> Get()
+        public async Task<ActionResult<List<PerfilDTO>>> Get()
         {
-            var listaPerfil = await _context.Perfiles.ToListAsync();
-            return Ok(listaPerfil);
+            return Ok(await _perfilService.lista());
         }
 
     }
